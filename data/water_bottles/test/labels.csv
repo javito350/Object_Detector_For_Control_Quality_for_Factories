@@ -1,0 +1,8 @@
+# Ground Truth Labels for Water Bottle Test Set
+# Format: filename, label (0=GOOD, 1=DEFECTIVE)
+
+test.jpeg,1
+test2.jpeg,0
+test3.jpeg,1
+test4.jpeg,0
+test5.jpeg,1

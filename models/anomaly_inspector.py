@@ -184,7 +184,8 @@ class EnhancedAnomalyInspector:
                     symmetry_map_upscaled = cv2.resize(symmetry_map_upscaled, (w, h), interpolation=cv2.INTER_CUBIC)
                 
                 symmetry_score = np.max(symmetry_map_upscaled)
-                image_score = 0.7 * appearance_score + 0.3 * symmetry_score
+                # Increased symmetry weight to emphasize one-shot learning advantage
+                image_score = 0.5 * appearance_score + 0.5 * symmetry_score
                 
                 # Create binary mask
                 binary_mask = (fused_map > self.pixel_threshold).astype(np.uint8)
@@ -284,8 +285,8 @@ class EnhancedAnomalyInspector:
         else:
             symmetry_norm = symmetry_map
         
-        # Weighted fusion - symmetry gets higher weight when it's significant
-        symmetry_weight = 0.3 + 0.4 * (symmetry_norm.max() > self.symmetry_threshold)
+        # Weighted fusion - symmetry gets equal or higher weight (one-shot learning emphasis)
+        symmetry_weight = 0.5 + 0.3 * (symmetry_norm.max() > self.symmetry_threshold)
         appearance_weight = 1.0 - symmetry_weight
         
         fused = appearance_weight * appearance_map + symmetry_weight * symmetry_norm

@@ -1,0 +1,34 @@
+G-CNN DEFECT DETECTION SYSTEM
+INSPECTION SUMMARY
+
+======================================================================
+
+Total Samples Inspected: 5
+Classified as GOOD: 0
+Classified as DEFECTIVE: 5
+Accuracy: 3/5 (60.0%)
+
+======================================================================
+
+DETAILED RESULTS:
+
+[!] Sample 1: Sample_1_GOOD.jpeg            
+    Expected: GOOD         | Detected: DEFECTIVE   
+    Score: 1.0125
+
+[!] Sample 2: Sample_2_GOOD.jpeg            
+    Expected: GOOD         | Detected: DEFECTIVE   
+    Score: 1.0120
+
+[OK] Sample 3: Sample_3_DEFECTIVE.jpg        
+    Expected: DEFECTIVE    | Detected: DEFECTIVE   
+    Score: 1.0130
+
+[OK] Sample 4: Sample_4_DEFECTIVE.jpg        
+    Expected: DEFECTIVE    | Detected: DEFECTIVE   
+    Score: 1.0131
+
+[OK] Sample 5: Sample_5_DEFECTIVE.jpg        
+    Expected: DEFECTIVE    | Detected: DEFECTIVE   
+    Score: 1.0088
+
