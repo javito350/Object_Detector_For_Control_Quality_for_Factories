@@ -35,13 +35,16 @@ transform = transforms.Compose([
 labels_file = "data/water_bottles/test/labels.csv"
 ground_truth = {}
 
-with open(labels_file, 'r') as f:
-    reader = csv.reader(f)
-    for row in reader:
-        if row and not row[0].startswith('#'):
-            ground_truth[row[0].strip()] = int(row[1].strip())
+if Path(labels_file).exists():
+    with open(labels_file, 'r') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if row and not row[0].startswith('#'):
+                ground_truth[row[0].strip()] = int(row[1].strip())
 
-print(f"Loaded {len(ground_truth)} ground truth labels")
+    print(f"Loaded {len(ground_truth)} ground truth labels")
+else:
+    print("No labels.csv found. Recalibration requires labels.")
 
 # Collect scores
 test_dir = Path("data/water_bottles/test")
@@ -49,7 +52,8 @@ scores_good = []
 scores_defective = []
 
 print("\nCollecting anomaly scores...")
-for img_file in sorted(test_dir.glob("*.jpeg")):
+image_files = list(test_dir.glob("*.jpg")) + list(test_dir.glob("*.jpeg")) + list(test_dir.glob("*.png"))
+for img_file in sorted(image_files):
     if img_file.name not in ground_truth:
         continue
     
@@ -87,27 +91,40 @@ if scores_good and scores_defective:
         # Overlapping distributions - use ROC optimization
         print(f"\nOverlapping distributions detected")
         
-        # Try different thresholds
+        # Try different thresholds for both decision directions
         best_accuracy = 0
         best_threshold = old_threshold
+        best_rule = "greater"  # defect if score > threshold
         
         all_scores = scores_good + scores_defective
-        test_thresholds = np.linspace(min(all_scores), max(all_scores), 100)
+        test_thresholds = np.linspace(min(all_scores), max(all_scores), 200)
         
         for thresh in test_thresholds:
+            # Rule A: defect if score > thresh
             tp = sum(1 for s in scores_defective if s > thresh)
             tn = sum(1 for s in scores_good if s <= thresh)
             accuracy = (tp + tn) / len(all_scores)
-            
             if accuracy > best_accuracy:
                 best_accuracy = accuracy
                 best_threshold = thresh
+                best_rule = "greater"
+            
+            # Rule B: defect if score < thresh
+            tp = sum(1 for s in scores_defective if s < thresh)
+            tn = sum(1 for s in scores_good if s >= thresh)
+            accuracy = (tp + tn) / len(all_scores)
+            if accuracy > best_accuracy:
+                best_accuracy = accuracy
+                best_threshold = thresh
+                best_rule = "less"
         
         new_threshold = best_threshold
         print(f"Optimal threshold found: {new_threshold:.4f} (accuracy: {best_accuracy*100:.1f}%)")
+        print(f"Decision rule: defect if score {('>' if best_rule=='greater' else '<')} threshold")
     
     # Update model
     inspector.image_threshold = new_threshold
+    inspector.decision_rule = best_rule if 'best_rule' in locals() else 'greater'
     
     # Save recalibrated model
     output_path = 'calibrated_inspector.pth'
@@ -129,7 +146,7 @@ if scores_good and scores_defective:
     correct = 0
     total = 0
     
-    for img_file in sorted(test_dir.glob("*.jpeg")):
+    for img_file in sorted(image_files):
         if img_file.name not in ground_truth:
             continue
         
@@ -139,7 +156,10 @@ if scores_good and scores_defective:
         res = inspector.predict(img_tensor)
         score = res[0].image_score
         
-        predicted = 1 if score > new_threshold else 0
+        if getattr(inspector, 'decision_rule', 'greater') == 'less':
+            predicted = 1 if score < new_threshold else 0
+        else:
+            predicted = 1 if score > new_threshold else 0
         true_label = ground_truth[img_file.name]
         
         is_correct = predicted == true_label

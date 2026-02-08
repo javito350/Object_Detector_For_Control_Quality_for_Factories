@@ -1,8 +1,14 @@
-# Ground Truth Labels for Water Bottle Test Set
-# Format: filename, label (0=GOOD, 1=DEFECTIVE)
-
-test.jpeg,1
-test2.jpeg,0
-test3.jpeg,1
-test4.jpeg,0
-test5.jpeg,1
+GOOD_01.jpg,0
+GOOD_02.jpg,0
+GOOD_03.jpg,0
+GOOD_04.jpg,0
+defect_crack_01.jpg,1
+defect_dent_02.jpg,1
+defect_missing_label_03.jpg,1
+defect_scratch_04.jpg,1
+defect_color_shift_05.jpg,1
+defect_asymmetric_06.jpg,1
+defect_crack_02.jpg,1
+defect_dent_01.jpg,1
+defect_missing_label_04.jpg,1
+defect_scratch_05.jpg,1
