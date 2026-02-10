@@ -1,12 +1,18 @@
-"""
-Recalibrate model threshold based on ground truth labels
-"""
-import torch
-from PIL import Image
-import torchvision.transforms as transforms
-from pathlib import Path
+"""Recalibrate model threshold based on ground truth labels."""
 import csv
+import sys
+from pathlib import Path
+
 import numpy as np
+import torch
+import torchvision.transforms as transforms
+from PIL import Image
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+WEIGHTS_DIR = ROOT_DIR / "weights"
+DATA_DIR = ROOT_DIR / "data"
+
+sys.path.append(str(ROOT_DIR / "models"))
 
 from models.anomaly_inspector import EnhancedAnomalyInspector
 torch.serialization.add_safe_globals([EnhancedAnomalyInspector])
@@ -17,7 +23,11 @@ print("="*70)
 
 # Load model
 print("\nLoading model...")
-inspector = torch.load('sensitive_inspector.pth', map_location='cpu', weights_only=False)
+model_path = WEIGHTS_DIR / "sensitive_inspector.pth"
+if not model_path.exists():
+    raise FileNotFoundError(f"Sensitive inspector not found at {model_path}")
+
+inspector = torch.load(str(model_path), map_location='cpu', weights_only=False)
 old_threshold = inspector.image_threshold
 if hasattr(old_threshold, 'item'):
     old_threshold = old_threshold.item()
@@ -32,11 +42,11 @@ transform = transforms.Compose([
 ])
 
 # Load ground truth
-labels_file = "data/water_bottles/test/labels.csv"
+labels_file = DATA_DIR / "water_bottles" / "test" / "labels.csv"
 ground_truth = {}
 
-if Path(labels_file).exists():
-    with open(labels_file, 'r') as f:
+if labels_file.exists():
+    with labels_file.open('r') as f:
         reader = csv.reader(f)
         for row in reader:
             if row and not row[0].startswith('#'):
@@ -47,7 +57,7 @@ else:
     print("No labels.csv found. Recalibration requires labels.")
 
 # Collect scores
-test_dir = Path("data/water_bottles/test")
+test_dir = DATA_DIR / "water_bottles" / "test"
 scores_good = []
 scores_defective = []
 
@@ -127,7 +137,8 @@ if scores_good and scores_defective:
     inspector.decision_rule = best_rule if 'best_rule' in locals() else 'greater'
     
     # Save recalibrated model
-    output_path = 'calibrated_inspector.pth'
+    WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
+    output_path = WEIGHTS_DIR / 'calibrated_inspector.pth'
     torch.save(inspector, output_path)
     
     print(f"\n" + "="*70)

@@ -1,10 +1,16 @@
 # one_image_setup.py - USING TRAINING IMAGES FOR CALIBRATION
+import glob
+import os
+import sys
+from pathlib import Path
+
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
-import sys
-import os
-import glob
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = ROOT_DIR / "data"
+WEIGHTS_DIR = ROOT_DIR / "weights"
 
 print("=" * 60)
 print("MOON SYMMETRY EXPERIMENT - SINGLE IMAGE CALIBRATION")
@@ -13,7 +19,7 @@ print("This tool learns from perfect reference images")
 print("in the TRAIN/GOOD folder for defect detection!")
 print("=" * 60)
 
-sys.path.append('models')
+sys.path.append(str(ROOT_DIR / 'models'))
 from models.anomaly_inspector import EnhancedAnomalyInspector
 
 def setup_with_one_image(perfect_image_path):
@@ -88,7 +94,7 @@ def setup_with_one_image(perfect_image_path):
     
     return inspector
 
-def setup_with_training_images(train_folder="data/water_bottles/train/good"):
+def setup_with_training_images(train_folder=str(DATA_DIR / "water_bottles" / "train" / "good")):
     """
     Setup the system with ALL good images from training folder.
     """
@@ -188,7 +194,7 @@ if __name__ == "__main__":
             print("SINGLE TRAINING IMAGE CALIBRATION")
             print("=" * 60)
             
-            train_folder = "data/water_bottles/train/good"
+            train_folder = str(DATA_DIR / "water_bottles" / "train" / "good")
             if os.path.exists(train_folder):
                 print(f"\n📁 Perfect reference images in {train_folder}:")
                 images = []
@@ -240,7 +246,7 @@ if __name__ == "__main__":
             print("MULTI-IMAGE TRAINING CALIBRATION")
             print("=" * 60)
             
-            inspector, used_images = setup_with_training_images("data/water_bottles/train/good")
+            inspector, used_images = setup_with_training_images(str(DATA_DIR / "water_bottles" / "train" / "good"))
             print(f"\n✅ Calibrated with {len(used_images)} perfect training examples")
             
         elif choice == "3":
@@ -251,7 +257,7 @@ if __name__ == "__main__":
             print("⚠️  Using test images for calibration")
             print("   (Normally use train/good/ images!)")
             
-            test_folder = "data/water_bottles/test"
+            test_folder = str(DATA_DIR / "water_bottles" / "test")
             if os.path.exists(test_folder):
                 images = []
                 for ext in [".jpeg", ".jpg", ".png"]:
@@ -290,10 +296,11 @@ if __name__ == "__main__":
                 sys.exit(1)
         else:
             print("❌ Invalid choice. Using single training image...")
-            inspector = setup_with_one_image("data/water_bottles/train/good/example_good_water_bottle.jpeg")
+            inspector = setup_with_one_image(str(DATA_DIR / "water_bottles" / "train" / "good" / "example_good_water_bottle.jpeg"))
         
         # Save the calibrated inspector
-        output_file = "calibrated_inspector.pth"
+        WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
+        output_file = WEIGHTS_DIR / "calibrated_inspector.pth"
         torch.save(inspector, output_file)
         
         print(f"\n💾 Saved calibrated inspector to: {output_file}")
@@ -328,7 +335,7 @@ if __name__ == "__main__":
         print(f"\n📁 Current directory: {os.getcwd()}")
         
         # Show available training data
-        train_path = "data/water_bottles/train/good"
+        train_path = str(DATA_DIR / "water_bottles" / "train" / "good")
         if os.path.exists(train_path):
             print(f"\n📂 Training images in {train_path}:")
             items = os.listdir(train_path)

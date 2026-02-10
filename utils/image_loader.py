@@ -1,5 +1,4 @@
-import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from PIL import Image
 import os
 from torchvision import transforms as T

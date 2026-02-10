@@ -7,7 +7,7 @@ from models.anomaly_inspector import InspectionResult
 
 class AnomalyVisualizer:
     """
-    PhD-level visualization for anomaly detection results.
+    Visualization for anomaly detection results.
     """
     
     @staticmethod

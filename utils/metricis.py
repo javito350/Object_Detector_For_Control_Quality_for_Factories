@@ -7,7 +7,7 @@ import json
 
 class AdvancedMetrics:
     """
-    PhD-level evaluation metrics for anomaly detection.
+    Evaluation metrics for anomaly detection.
     Includes pixel-level and image-level metrics.
     """
     

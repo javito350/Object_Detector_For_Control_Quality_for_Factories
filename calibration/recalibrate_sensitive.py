@@ -1,25 +1,31 @@
 # recalibrate_sensitive.py
+import glob
+import os
+import sys
+from pathlib import Path
+
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
-import os
-import sys
-import glob
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = ROOT_DIR / "data"
+WEIGHTS_DIR = ROOT_DIR / "weights"
 
 print("=" * 60)
 print("RECALIBRATION - MORE SENSITIVE DETECTION")
 print("=" * 60)
 
-sys.path.append('models')
+sys.path.append(str(ROOT_DIR / 'models'))
 from models.anomaly_inspector import EnhancedAnomalyInspector
 
 def create_sensitive_inspector():
     """Create an inspector with lower thresholds for better defect detection"""
     
     # Load the perfect reference
-    ref_path = "data/water_bottles/train/good/example_good_water_bottle.jpeg"
-    print(f"\n📸 Reference image: {os.path.basename(ref_path)}")
-    
+    ref_path = DATA_DIR / "water_bottles" / "train" / "good" / "example_good_water_bottle.jpeg"
+    print(f"\n📸 Reference image: {ref_path.name}")
+
     img = Image.open(ref_path).convert('RGB')
     
     transform = transforms.Compose([
@@ -61,7 +67,7 @@ def create_sensitive_inspector():
     # Create dataloader
     class OneImageLoader:
         def __iter__(self):
-            yield (img_tensor, torch.zeros(1), [ref_path])
+            yield (img_tensor, torch.zeros(1), [str(ref_path)])
         def __len__(self):
             return 1
     
@@ -87,17 +93,18 @@ def create_sensitive_inspector():
     print("\n🔄 Alternative: Creating inspector that focuses on defects...")
     
     # Save this inspector
-    output_file = "sensitive_inspector.pth"
+    output_file = WEIGHTS_DIR / "sensitive_inspector.pth"
+    WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
     torch.save(inspector, output_file)
-    
+
     print(f"\n💾 Saved sensitive inspector to: {output_file}")
     
     # Test it immediately
     print("\n🔬 Quick test on test images...")
     
-    test_folder = "data/water_bottles/test"
-    if os.path.exists(test_folder):
-        test_images = glob.glob(os.path.join(test_folder, "*.jpeg"))
+    test_folder = DATA_DIR / "water_bottles" / "test"
+    if test_folder.exists():
+        test_images = glob.glob(str(test_folder / "*.jpeg"))
         
         for test_path in test_images[:3]:  # Test first 3
             try:
@@ -106,7 +113,7 @@ def create_sensitive_inspector():
                 
                 result = inspector.predict(test_tensor)
                 
-                print(f"\n  {os.path.basename(test_path)}:")
+                print(f"\n  {Path(test_path).name}:")
                 
                 # Extract score
                 score = 0.0
@@ -144,7 +151,7 @@ if __name__ == "__main__":
     print("RECALIBRATION COMPLETE")
     print("=" * 60)
     print("✅ Created more sensitive inspector")
-    print("✅ Saved as 'sensitive_inspector.pth'")
+    print(f"✅ Saved as '{output_file.name}' in {WEIGHTS_DIR}")
     print("\n🚀 Use it in your demo:")
     print("   python demo_sensitive.py")
     print("=" * 60)
