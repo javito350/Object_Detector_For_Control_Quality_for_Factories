@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Training Quality Control: The One-Shot CNN Solution For Small Factories</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="slider-container">
+        <!-- Slide 1: The Bottleneck -->
+        <div class="slide active" id="slide-1">
+            <div class="content-card">
+                <div class="image-container">
+                    <img src="image1.png" 
+                         alt="Manual Factory Inspection"
+                         onerror="this.style.display='none'; this.parentElement.innerHTML='<p>[Image failed to load. Please insure image1.png is in the same folder]</p>';">
+                </div>
+                <h1>The Factory Bottleneck</h1>
+                <p>
+                    Picture this: You are the factory owner.<br>
+                    You spend <span class="highlight">countless hours</span> every day manually checking every single water bottle on the line.
+                    It's tedious, error-prone, and exhausting.
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Cost Barrier -->
+        <div class="slide" id="slide-2">
+            <div class="content-card">
+                <div class="image-container">
+                    <img src="image2.png" 
+                         alt="Expensive Inspection Machine"
+                         onerror="this.style.display='none'; this.parentElement.innerHTML='<p>[Image failed to load. Please insure image2.png is in the same folder]</p>';">
+                </div>
+                <h1>The Cost Barrier</h1>
+                <p>
+                    A seller approaches you with a "solution".<br>
+                    It works, but the price is astronomical. <span class="highlight">$18,000+</span> for a basic manual vision system.<br>
+                    For many factories, this is simply <strong>unaffordable</strong>.
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 3: The Complexity Trap -->
+        <div class="slide" id="slide-3">
+            <div class="content-card">
+                <h1>The AI Complexity Trap</h1>
+                <p>
+                    Standard AI solutions demand too much:<br>
+                    <br>
+                    ❌ Hiring Data Scientists<br>
+                    ❌ Collecting Thousands of Images<br>
+                    ❌ Manually Labeling Data<br>
+                    ❌ Days of Training Time<br>
+                    <br>
+                    <span class="highlight">Most owners simply don't have the time or expertise.</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Slide 4: The Solution -->
+        <div class="slide" id="slide-4">
+            <div class="content-card">
+                <div style="font-size: 5rem; color: var(--accent-color); margin-bottom: 1rem;">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <h1>The Future is Here</h1>
+                <p style="font-size: 1.8rem;">
+                    My Solution: <span class="highlight">One-Shot Detection</span>
+                </p>
+                <p>
+                    Forget thousands of samples. Forget complex training.<br>
+                    With just <span class="highlight" style="font-size: 1.5em; display: inline-block; transform: scale(1.1); font-weight:800; color: #fff;">1 IMAGE</span> of your product, 
+                    my AI learns to detect defects <strong>instantly</strong>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
