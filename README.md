@@ -1,4 +1,4 @@
-# 🌙 Moon Symmetry Experiment: Anomaly Detection for Manufacturing
+# 🔍 Anomaly Detection System: AI-Powered Manufacturing Quality Control
 
 **An Advanced Deep Learning System for Automated Quality Control in Manufacturing**
 
@@ -103,8 +103,8 @@ Unlike standard anomaly detection that requires balanced datasets, this system l
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/Moon_Symmetry_Experiment.git
-cd Moon_Symmetry_Experiment
+git clone https://github.com/javito350/Object_Detector_For_Control_Quality_for_Factories.git
+cd Anomaly_Detection_System
 
 # Create a Python virtual environment
 python -m venv venv
@@ -174,7 +174,7 @@ For detailed usage examples, see [USAGE.md](USAGE.md).
 ## 📁 Project Structure
 
 ```
-Moon_Symmetry_Experiment/
+Anomaly_Detection_System/
 ├── README.md                       # This file
 ├── INSTALLATION.md                 # Detailed setup instructions
 ├── USAGE.md                        # Comprehensive usage guide
@@ -360,11 +360,11 @@ Please submit issues and pull requests through GitHub.
 If you use this work in research, please cite:
 
 ```bibtex
-@misc{MoonSymmetryExperiment2024,
+@misc{AnomalyDetectionSystem2024,
   title={Symmetry-Aware Anomaly Detection for Manufacturing Quality Control},
   author={Javier},
   year={2024},
-  howpublished={\url{https://github.com/yourusername/Moon_Symmetry_Experiment}}
+  howpublished={\url{https://github.com/javito350/Object_Detector_For_Control_Quality_for_Factories}}
 }
 ```
 
