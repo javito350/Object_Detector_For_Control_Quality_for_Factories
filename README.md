@@ -350,7 +350,7 @@ Please submit issues and pull requests through GitHub.
 ## 📧 Contact & Support
 
 - **Author**: Javier (Junior Seminar Project)
-- **Institution**: [Your University]
+- **Institution**: Allegheny College
 - **Questions**: Open an issue on GitHub
 
 ---
@@ -370,5 +370,5 @@ If you use this work in research, please cite:
 
 ---
 
-**Last Updated**: February 2024  
+**Last Updated**: February 2026
 **Status**: Active Development
