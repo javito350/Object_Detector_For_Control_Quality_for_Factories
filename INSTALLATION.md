@@ -91,61 +91,6 @@ brew install git
 sudo apt install git
 ```
 
-### 3. NVIDIA GPU Setup (Optional but Recommended)
-
-If you have an NVIDIA GPU and want GPU acceleration:
-
-#### Step 1: Verify GPU Compatibility
-```bash
-# Windows
-nvidia-smi
-
-# Linux
-nvidia-smi
-```
-
-Should display your GPU model and current CUDA version.
-
-#### Step 2: Install CUDA Toolkit
-
-**Windows**: Download from [NVIDIA CUDA Downloads](https://developer.nvidia.com/cuda-downloads)
-
-**Linux (Ubuntu 20.04)**:
-```bash
-wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-1804
-sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
-sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
-sudo apt-get update
-sudo apt-get -y install cuda
-```
-
-#### Step 3: Install cuDNN
-
-1. Download cuDNN from [NVIDIA cuDNN](https://developer.nvidia.com/cuDNN) (requires account)
-2. Extract and add to CUDA directory:
-
-**Windows**:
-```cmd
-:: Extract cuDNN and copy to CUDA installation
-copy cudnn\bin\cudnn64_8.dll "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.8\bin\"
-```
-
-**Linux**:
-```bash
-tar -xzf cudnn-linux-x86_64-8.x.x.x_cuda11.x-archive.tar.xz
-sudo cp -r cudnn-archive/include/* /usr/local/cuda/include/
-sudo cp -r cudnn-archive/lib/* /usr/local/cuda/lib64/
-```
-
-#### Step 4: Verify GPU Setup
-```bash
-python -c "import torch; print(torch.cuda.is_available())"  # Should print True
-python -c "import torch; print(torch.cuda.get_device_name(0))"  # Shows your GPU
-```
-
----
-
 ## Installation Methods
 
 ### Method 1: Standard Installation (Recommended)
