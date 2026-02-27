@@ -121,91 +121,8 @@ pip install -r requirements.txt
 python -c "import torch; import torchvision; print('Installation successful!')"
 ```
 
-### Method 2: Conda Installation
-
-```bash
-# 1. Download Anaconda from https://www.anaconda.com/download
-# Or use Miniconda for lighter installation
-
-# 2. Create conda environment
-conda create -n moon_symmetry python=3.11
-
-# 3. Activate environment
-conda activate moon_symmetry
-
-# 4. Install dependencies
-conda install -c pytorch pytorch torchvision
-
-# 5. Install remaining packages
-pip install -r requirements.txt
-```
-
-### Method 3: Docker Installation
-
-```dockerfile
-# Dockerfile
-FROM pytorch/pytorch:2.0-cuda11.8-runtime-ubuntu22.04
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-CMD ["python", "run_demo.py"]
-```
-
-Build and run:
-```bash
-docker build -t moon_symmetry .
-docker run --gpus all -v /path/to/data:/app/data moon_symmetry
-```
-
 ---
 
-## GPU Setup
-
-### Verify GPU Installation
-
-```python
-import torch
-
-# Check if GPU is available
-print(f"GPU Available: {torch.cuda.is_available()}")
-print(f"GPU Count: {torch.cuda.device_count()}")
-print(f"GPU Name: {torch.cuda.get_device_name(0)}")
-
-# Check CUDA version
-print(f"CUDA Version: {torch.version.cuda}")
-
-# Create a test tensor on GPU
-x = torch.randn(1000, 1000).cuda()
-y = torch.randn(1000, 1000).cuda()
-z = torch.matmul(x, y)  # This runs on GPU
-print(f"GPU Test Successful: {z is not None}")
-```
-
-### Force GPU Usage
-
-```python
-import torch
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
-
-# Move model to GPU
-model = model.to(device)
-```
-
-### Force CPU Usage
-
-```python
-import torch
-
-device = torch.device("cpu")
-model = model.to(device)
-```
-
----
 
 ## Download Pre-trained Weights
 
@@ -231,27 +148,6 @@ ls -la weights/
 
 ---
 
-## Verification
-
-### 1. Test Basic Import
-
-```python
-# test_import.py
-import torch
-import torchvision
-import cv2
-import numpy as np
-from models.anomaly_inspector import EnhancedAnomalyInspector
-
-print("✓ All imports successful!")
-print(f"✓ PyTorch version: {torch.__version__}")
-print(f"✓ CUDA available: {torch.cuda.is_available()}")
-```
-
-Run:
-```bash
-python test_import.py
-```
 
 ### 2. Test Model Loading
 
