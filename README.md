@@ -103,8 +103,8 @@ Unlike standard anomaly detection that requires balanced datasets, this system l
 
 ```bash
 # Clone the repository
-git clone https://github.com/javito350/Object_Detector_For_Control_Quality_for_Factories.git
-cd Anomaly_Detection_System
+git clone https://github.com/javito350/Moon_Symmetry_Experiment.git
+cd Moon_Symmetry_Experiment
 
 # Create a Python virtual environment
 python -m venv venv
@@ -112,6 +112,8 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
+# OR with uv (faster):
+# uv pip install -r requirements.txt
 
 # Verify installation
 python -c "import torch; print(f'PyTorch version: {torch.__version__}')"

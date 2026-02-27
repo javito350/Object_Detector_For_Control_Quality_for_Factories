@@ -39,6 +39,33 @@ Complete installation instructions for the Moon Symmetry Experiment anomaly dete
 
 ## Prerequisites
 
+### 0. Install uv (Optional but Recommended)
+
+**uv** is a fast Python package installer. It replaces pip and is significantly faster:
+
+**Windows**:
+```bash
+# Using pipx
+pipx install uv
+
+# Or download from https://github.com/astral-sh/uv/releases
+```
+
+**macOS**:
+```bash
+brew install uv
+```
+
+**Linux**:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Verify installation:
+```bash
+uv --version
+```
+
 ### 1. Install Python
 
 **Windows**:
@@ -93,11 +120,35 @@ sudo apt install git
 
 ## Installation Methods
 
-### Method 1: Standard Installation (Recommended)
+### Method 1: Standard Installation with uv (Fastest - Recommended)
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/yourusername/Moon_Symmetry_Experiment.git
+git clone https://github.com/javito350/Moon_Symmetry_Experiment.git
+cd Moon_Symmetry_Experiment
+
+# 2. Create a virtual environment with uv
+uv venv
+
+# 3. Activate the virtual environment
+# Windows
+.venv\Scripts\activate
+
+# macOS/Linux
+source .venv/bin/activate
+
+# 4. Install dependencies with uv
+uv pip install -r requirements.txt
+
+# 5. Verify installation
+python -c "import torch; import torchvision; print('Installation successful!')"
+```
+
+### Method 1b: Standard Installation with pip
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/javito350/Moon_Symmetry_Experiment.git
 cd Moon_Symmetry_Experiment
 
 # 2. Create a virtual environment
@@ -130,7 +181,7 @@ The system requires pre-trained model weights. Download them:
 
 ```bash
 # Option 1: From GitHub (if hosted)
-wget https://github.com/yourusername/Moon_Symmetry_Experiment/releases/download/v1.0/weights.tar.gz
+wget https://github.com/javito350/Moon_Symmetry_Experiment/releases/download/v1.0/weights.tar.gz
 tar -xzf weights.tar.gz
 
 # Option 2: Manual download
