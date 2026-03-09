@@ -4,7 +4,6 @@
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-1.9%2B-red)](https://pytorch.org/)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ## 🎯 Project Overview
 
@@ -328,12 +327,6 @@ See [LIMITATIONS_AND_FUTURE.md](LIMITATIONS_AND_FUTURE.md) for full discussion.
 - **RAM**: 4GB minimum, 8GB recommended
 
 See [INSTALLATION.md](INSTALLATION.md#system-requirements) for details.
-
----
-
-## 📝 License
-
-This project is released under the **MIT License**. See [LICENSE](LICENSE) for details.
 
 ---
 
