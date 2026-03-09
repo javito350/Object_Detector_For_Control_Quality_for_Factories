@@ -125,7 +125,7 @@ sudo apt install git
 ```bash
 # 1. Clone the repository
 git clone https://github.com/javito350/Moon_Symmetry_Experiment.git
-cd Moon_Symmetry_Experiment
+cd "quality control for factories"  # or: cd "<your-project-folder>"
 
 # 2. Create a virtual environment with uv
 uv venv
@@ -149,7 +149,7 @@ python -c "import torch; import torchvision; print('Installation successful!')"
 ```bash
 # 1. Clone the repository
 git clone https://github.com/javito350/Moon_Symmetry_Experiment.git
-cd Moon_Symmetry_Experiment
+cd "quality control for factories"  # or: cd "<your-project-folder>"
 
 # 2. Create a virtual environment
 python -m venv venv

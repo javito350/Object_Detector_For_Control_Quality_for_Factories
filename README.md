@@ -104,7 +104,7 @@ Unlike standard anomaly detection that requires balanced datasets, this system l
 ```bash
 # Clone the repository
 git clone https://github.com/javito350/Moon_Symmetry_Experiment.git
-cd Moon_Symmetry_Experiment
+cd "quality control for factories"  # or: cd "<your-project-folder>"
 
 # Create a Python virtual environment
 python -m venv venv
@@ -225,7 +225,7 @@ Anomaly_Detection_System/
 ## 🧪 Example: Image & Results
 
 ### Input
-![Example Water Bottle (Good)](examples/good_bottle.jpg)
+![Example Water Bottle (Good)](data/water_bottles/test/01_good.jpg)
 *A normal, non-defective water bottle*
 
 ### Output
@@ -245,7 +245,7 @@ Anomaly Detection Results:
 ```
 
 ### Defect Example
-![Example Water Bottle (Crack)](examples/cracked_bottle.jpg)
+![Example Water Bottle (Crack)](data/water_bottles/test/02_defect_crack.jpg)
 *Water bottle with surface crack*
 
 ### Output
