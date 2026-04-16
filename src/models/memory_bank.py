@@ -5,7 +5,10 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import MiniBatchKMeans
 from tqdm import tqdm
 from typing import List, Tuple
-import os
+import logging
+
+
+LOGGER = logging.getLogger(__name__)
 
 class EnhancedCoresetSampler:
     """Coreset sampler that picks a smaller but diverse feature set."""
@@ -58,6 +61,8 @@ class EnhancedCoresetSampler:
 class MemoryBank:
     """Symmetry-Aware Quantized Memory Bank for Anomaly Detection."""
     def __init__(self, dimension: int, use_gpu: bool = True, use_pq: bool = True):
+        if dimension <= 0:
+            raise ValueError(f"dimension must be > 0, got {dimension}")
         self.dimension = dimension
         self.use_gpu = use_gpu and torch.cuda.is_available()
         self.use_pq = use_pq
@@ -72,9 +77,18 @@ class MemoryBank:
         self.feature_mean = None
         self.feature_cov_inv = None
 
+    def _choose_subquantizers(self) -> int:
+        """Pick a valid PQ subquantizer count M that divides feature dimension."""
+        candidate_ms = [64, 48, 32, 24, 16, 12, 8, 6, 4, 3, 2, 1]
+        for m_value in candidate_ms:
+            if m_value <= self.dimension and self.dimension % m_value == 0:
+                return m_value
+        return 1
+
     def _orbit_aware_reduction(self, features: np.ndarray, similarity_threshold: float = 0.98) -> np.ndarray:
         """Filters redundant features in the same geometric orbit (p4m symmetry)."""
-        if len(features) < 2: return features
+        if len(features) < 2:
+            return features
         norm_features = self._normalize_features(features)
         keep_indices = [0]
         for i in range(1, len(features)):
@@ -85,7 +99,30 @@ class MemoryBank:
 
     def build(self, features_list: List[np.ndarray], coreset_percentage: float = 0.1, pq_bits: int = 8) -> None:
         """Builds the bank using Orbit-Aware reduction and optional PQ compression."""
-        all_features = np.vstack(features_list).astype(np.float32)
+        if not features_list:
+            raise ValueError("features_list is empty; at least one feature batch is required")
+        if not (0.0 < coreset_percentage <= 1.0):
+            raise ValueError(f"coreset_percentage must be in (0, 1], got {coreset_percentage}")
+        if self.use_pq and not (1 <= int(pq_bits) <= 16):
+            raise ValueError(f"pq_bits must be in [1, 16], got {pq_bits}")
+
+        cleaned_features = []
+        for idx, feature_batch in enumerate(features_list):
+            batch = np.asarray(feature_batch, dtype=np.float32)
+            if batch.ndim != 2:
+                raise ValueError(f"features_list[{idx}] must be 2D, got shape {batch.shape}")
+            if batch.shape[1] != self.dimension:
+                raise ValueError(
+                    f"features_list[{idx}] has invalid feature dimension {batch.shape[1]} "
+                    f"(expected {self.dimension})"
+                )
+            if not np.isfinite(batch).all():
+                raise ValueError(f"features_list[{idx}] contains NaN/Inf values")
+            cleaned_features.append(batch)
+
+        all_features = np.vstack(cleaned_features).astype(np.float32)
+        if all_features.shape[0] < 2:
+            raise ValueError("At least 2 feature vectors are required to build the memory bank")
         
         # 1. Reduction Stages
         all_features = self._orbit_aware_reduction(all_features)
@@ -99,25 +136,49 @@ class MemoryBank:
         quantizer = faiss.IndexFlatL2(self.dimension)
 
         if self.use_pq:
-            # M = sub-vectors. For WRN50 (dimension 1024), 8 or 16 is standard.
-            M = 8 
+            # Use a valid M that divides dimension to avoid FAISS runtime failures.
+            M = self._choose_subquantizers()
             self.index = faiss.IndexIVFPQ(quantizer, self.dimension, nlist, M, pq_bits)
         else:
             self.index = faiss.IndexIVFFlat(quantizer, self.dimension, nlist, faiss.METRIC_L2)
         
         if self.use_gpu:
-            res = faiss.StandardGpuResources()
-            self.index = faiss.index_cpu_to_gpu(res, 0, self.index)
-            
-        self.index.train(self.features)
-        self.index.add(self.features)
+            try:
+                res = faiss.StandardGpuResources()
+                self.index = faiss.index_cpu_to_gpu(res, 0, self.index)
+            except Exception as exc:
+                LOGGER.warning("Falling back to CPU FAISS index after GPU init failure: %s", exc)
+
+        try:
+            self.index.train(self.features)
+            self.index.add(self.features)
+        except Exception as exc:
+            raise RuntimeError(f"Failed to build FAISS index: {exc}") from exc
+
         self.is_trained = True
         self._learn_statistics(all_features)
 
     def query(self, query_features: np.ndarray, k: int = 1) -> Tuple[np.ndarray, np.ndarray]:
-        if not self.is_trained: raise ValueError("Bank not built.")
+        if not self.is_trained:
+            raise ValueError("Memory bank has not been built. Call fit/build before query.")
+        if k <= 0:
+            raise ValueError(f"k must be >= 1, got {k}")
+
+        query_features = np.asarray(query_features, dtype=np.float32)
+        if query_features.ndim == 1:
+            query_features = query_features.reshape(1, -1)
+        if query_features.ndim != 2 or query_features.shape[1] != self.dimension:
+            raise ValueError(
+                f"query_features must have shape [N, {self.dimension}], got {query_features.shape}"
+            )
+        if not np.isfinite(query_features).all():
+            raise ValueError("query_features contains NaN/Inf values")
+
         query_features = self._normalize_features(query_features).astype(np.float32)
-        distances, indices = self.index.search(query_features, k)
+        try:
+            distances, indices = self.index.search(query_features, k)
+        except Exception as exc:
+            raise RuntimeError(f"FAISS query failed: {exc}") from exc
         return distances, indices
 
     def get_margin_pressure(self, exact_dist: np.ndarray, quant_dist: np.ndarray, labels: np.ndarray):
@@ -144,7 +205,8 @@ class MemoryBank:
         self.distance_std = np.std(distances)
 
     def _normalize_features(self, features: np.ndarray) -> np.ndarray:
-        if features.ndim == 1: features = features.reshape(1, -1)
+        if features.ndim == 1:
+            features = features.reshape(1, -1)
         norms = np.linalg.norm(features, axis=1, keepdims=True)
         norms[norms == 0] = 1
         return features / norms

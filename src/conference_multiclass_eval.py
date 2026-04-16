@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 import time
 
@@ -19,27 +20,58 @@ from models.thresholding import EVTCalibrator as Thresholding
 from utils.image_loader import MVTecStyleDataset
 
 
-ROOT_DIR = Path(__file__).resolve().parent
-MVTEC_ROOT = ROOT_DIR / "data" / "mvtec"
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+MVTEC_ROOT = PROJECT_ROOT / "data" / "mvtec"
 BACKBONE = "resnet18"
 # ResNet18 layer2 (128 channels) + layer3 (256 channels) = 384-D patch descriptors.
 FEATURE_DIM = 384
 BIT_RATES = [8]
+DEFAULT_SUPPORT_SEED = 111
 
 CATEGORIES = [
     "bottle",
+    "cable",
+    "capsule",
+    "carpet",
+    "grid",
+    "hazelnut",
+    "leather",
+    "metal_nut",
+    "pill",
     "screw",
+    "tile",
+    "toothbrush",
+    "transistor",
+    "wood",
+    "zipper",
 ]
 
 
-def build_train_dataloader(category: str) -> DataLoader:
+def sample_seeded_support_samples(
+    samples: list[tuple[str, int]], n_shot: int, seed: int
+) -> list[tuple[str, int]]:
+    if n_shot > len(samples):
+        raise ValueError(
+            f"Requested n_shot={n_shot}, but only {len(samples)} train/good samples are available."
+        )
+
+    # Sort first so a fixed seed always maps to the same physical files.
+    sorted_samples = sorted(samples, key=lambda item: item[0])
+    selected_idx = np.random.RandomState(seed).choice(len(sorted_samples), size=n_shot, replace=False)
+    return [sorted_samples[int(i)] for i in selected_idx]
+
+
+def build_train_dataloader(
+    category: str, n_shot: int = 10, support_seed: int = DEFAULT_SUPPORT_SEED
+) -> DataLoader:
     dataset = MVTecStyleDataset(
         root_dir=str(MVTEC_ROOT),
         category=category,
         is_train=True,
         img_size=256,
     )
-    dataset.samples = dataset.samples[:10]
+    dataset.samples = sample_seeded_support_samples(dataset.samples, n_shot=n_shot, seed=support_seed)
     return DataLoader(dataset, batch_size=1, shuffle=False)
 
 
@@ -172,7 +204,13 @@ def estimate_quantization_error(memory_bank: MemoryBank):
     }
 
 
-def evaluate_category(category: str, pq_bits: int | None = None, use_exact_search: bool = False):
+def evaluate_category(
+    category: str,
+    pq_bits: int | None = None,
+    use_exact_search: bool = False,
+    n_shot: int = 10,
+    support_seed: int = DEFAULT_SUPPORT_SEED,
+):
     category_path = MVTEC_ROOT / category
     if not category_path.exists():
         raise FileNotFoundError(f"Category path not found: {category_path}")
@@ -188,7 +226,7 @@ def evaluate_category(category: str, pq_bits: int | None = None, use_exact_searc
     inspector.feature_extractor = feature_extractor
     inspector.memory_bank = memory_bank
 
-    train_loader = build_train_dataloader(category)
+    train_loader = build_train_dataloader(category, n_shot=n_shot, support_seed=support_seed)
     test_loader = build_test_dataloader(category)
 
     support_features = extract_support_features(train_loader, feature_extractor, device)
@@ -253,7 +291,12 @@ def evaluate_category(category: str, pq_bits: int | None = None, use_exact_searc
     return result
 
 
-def run_evaluation(output_csv: Path, pq_bits: int | None = None, use_exact_search: bool = False):
+def run_evaluation(
+    output_csv: Path,
+    pq_bits: int | None = None,
+    use_exact_search: bool = False,
+    support_seed: int = DEFAULT_SUPPORT_SEED,
+):
     results = []
 
     for category in CATEGORIES:
@@ -265,6 +308,7 @@ def run_evaluation(output_csv: Path, pq_bits: int | None = None, use_exact_searc
                 category,
                 pq_bits=pq_bits,
                 use_exact_search=use_exact_search,
+                support_seed=support_seed,
             )
             results.append(category_result)
             print(
@@ -282,6 +326,7 @@ def run_evaluation(output_csv: Path, pq_bits: int | None = None, use_exact_searc
         except Exception as exc:
             print(f"Error while evaluating {category}: {exc}")
 
+    output_csv.parent.mkdir(parents=True, exist_ok=True)
     results_df = pd.DataFrame(results)
     results_df.to_csv(output_csv, index=False)
 
@@ -290,14 +335,33 @@ def run_evaluation(output_csv: Path, pq_bits: int | None = None, use_exact_searc
         print(results_df)
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run seeded 8-bit (or custom bit-rate) MVTec evaluation.")
+    parser.add_argument("--pq-bits", type=int, default=8, help="Product quantization bit-rate.")
+    parser.add_argument(
+        "--support-seed",
+        type=int,
+        default=DEFAULT_SUPPORT_SEED,
+        help="Random seed used for support-set sampling.",
+    )
+    parser.add_argument(
+        "--output-csv",
+        type=Path,
+        default=PROJECT_ROOT / "results" / "results_bits_8.csv",
+        help="Output CSV path.",
+    )
+    return parser.parse_args()
+
+
 def main():
-    for bit_rate in BIT_RATES:
-        print(f"\nSTARTING BIT-RATE: {bit_rate}")
-        run_evaluation(
-            output_csv=ROOT_DIR / f"results_bits_{bit_rate}.csv",
-            pq_bits=bit_rate,
-            use_exact_search=False,
-        )
+    args = parse_args()
+    print(f"STARTING EVALUATION | pq_bits={args.pq_bits} | support_seed={args.support_seed}")
+    run_evaluation(
+        output_csv=args.output_csv,
+        pq_bits=args.pq_bits,
+        use_exact_search=False,
+        support_seed=args.support_seed,
+    )
     print("SMOKE TEST COMPLETE: Results saved to CSV.")
 
 

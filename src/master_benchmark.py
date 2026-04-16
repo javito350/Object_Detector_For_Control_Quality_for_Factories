@@ -63,6 +63,7 @@ IMG_SIZE = 256
 BIT_OPTIONS = [4, 8, 12, "Oracle"]
 ROTATIONS = [0, 90, 180, 270]
 NSHOT_VALUES = [1, 3, 5, 10]
+DEFAULT_SUPPORT_SEED = 111
 
 CATEGORIES = [
     "bottle",
@@ -103,14 +104,28 @@ def write_run_metadata() -> None:
         handle.write(f"Python: {platform.python_version()}\n")
 
 
-def build_train_dataloader(category: str, n_shot: int) -> DataLoader:
+def sample_seeded_support_samples(
+    samples: list[tuple[str, int]], n_shot: int, seed: int
+) -> list[tuple[str, int]]:
+    if n_shot > len(samples):
+        raise ValueError(
+            f"Requested n_shot={n_shot}, but only {len(samples)} train/good samples are available."
+        )
+
+    # Sort first so a fixed seed always maps to the same physical files.
+    sorted_samples = sorted(samples, key=lambda item: item[0])
+    selected_idx = np.random.RandomState(seed).choice(len(sorted_samples), size=n_shot, replace=False)
+    return [sorted_samples[int(i)] for i in selected_idx]
+
+
+def build_train_dataloader(category: str, n_shot: int, support_seed: int = DEFAULT_SUPPORT_SEED) -> DataLoader:
     dataset = MVTecStyleDataset(
         root_dir=str(MVTEC_ROOT),
         category=category,
         is_train=True,
         img_size=IMG_SIZE,
     )
-    dataset.samples = dataset.samples[:n_shot]
+    dataset.samples = sample_seeded_support_samples(dataset.samples, n_shot=n_shot, seed=support_seed)
     dataset.transform = T.Compose(
         [
             T.Resize((IMG_SIZE, IMG_SIZE)),
@@ -222,6 +237,7 @@ def build_inspector(
     apply_p4m_support: bool,
     pq_bits: int | None,
     exact_search: bool,
+    support_seed: int = DEFAULT_SUPPORT_SEED,
     compute_pq_diagnostics: bool = False,
 ) -> tuple[AnomalyInspector, dict]:
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -238,7 +254,7 @@ def build_inspector(
     inspector.feature_extractor = feature_extractor
     inspector.memory_bank = memory_bank
 
-    train_loader = build_train_dataloader(category, n_shot=n_shot)
+    train_loader = build_train_dataloader(category, n_shot=n_shot, support_seed=support_seed)
     support_features = extract_support_features(
         train_loader,
         feature_extractor,
@@ -273,6 +289,7 @@ def evaluate_category(
     apply_p4m_support: bool,
     pq_bits: int | None,
     exact_search: bool,
+    support_seed: int = DEFAULT_SUPPORT_SEED,
     rotation_degrees: int = 0,
     collect_score_ranges: bool = False,
     compute_pq_diagnostics: bool = False,
@@ -287,6 +304,7 @@ def evaluate_category(
         apply_p4m_support=apply_p4m_support,
         pq_bits=pq_bits,
         exact_search=exact_search,
+        support_seed=support_seed,
         compute_pq_diagnostics=compute_pq_diagnostics,
     )
     test_loader = build_test_dataloader(category)

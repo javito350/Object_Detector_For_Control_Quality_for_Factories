@@ -3,6 +3,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 import cv2
 import time
+import logging
 from dataclasses import dataclass
 from enum import Enum
 import warnings
@@ -12,6 +13,9 @@ warnings.filterwarnings('ignore')
 from .symmetry_feature_extractor import SymmetryAwareFeatureExtractor
 from .memory_bank import MemoryBank
 from .thresholding import EVTCalibrator
+
+
+LOGGER = logging.getLogger(__name__)
 
 class DefectType(Enum):
     NOMINAL = "nominal"
@@ -61,12 +65,21 @@ class EnhancedAnomalyInspector:
         """
         print("Building memory bank from normal samples...")
         all_features = []
+        sample_count = 0
         
         for batch_idx, (images, _, _) in enumerate(dataloader):
+            if images is None or images.ndim != 4:
+                raise ValueError(f"Batch {batch_idx} has invalid image tensor shape: {getattr(images, 'shape', None)}")
             images = images.to(self.device)
+            sample_count += int(images.shape[0])
             # Extract features (applies 8x augmentation if apply_p4m=True)
             features = self.feature_extractor.extract_patch_features(images, apply_p4m=apply_p4m)
+            if features is None or len(features) == 0:
+                raise ValueError(f"Empty feature batch extracted at batch {batch_idx}")
             all_features.append(features)
+
+        if sample_count == 0:
+            raise ValueError("No training samples found in dataloader; cannot build memory bank")
             
         # Build FAISS Index
         self.memory_bank.build(all_features, coreset_percentage=self.coreset_percentage)
@@ -94,6 +107,15 @@ class EnhancedAnomalyInspector:
         NOTE: apply_p4m is False during inference; we only augment the support set!
         """
         results = []
+
+        if not isinstance(images, torch.Tensor):
+            raise TypeError(f"images must be a torch.Tensor, got {type(images)}")
+        if images.ndim != 4:
+            raise ValueError(f"images must have shape [B, C, H, W], got {tuple(images.shape)}")
+        if images.shape[1] != 3:
+            raise ValueError(f"images must have 3 channels (RGB), got {images.shape[1]}")
+        if not self.memory_bank.is_trained:
+            raise RuntimeError("Memory bank is not trained. Call fit(...) before predict(...)")
         
         with torch.no_grad():
             images = images.to(self.device)
@@ -104,15 +126,26 @@ class EnhancedAnomalyInspector:
             
             # 1. Extract patch features (single forward pass, no augmentation)
             batch_features = self.feature_extractor.extract_patch_features(images, apply_p4m=apply_p4m)
+            if not np.isfinite(batch_features).all():
+                raise ValueError("Extracted features contain NaN/Inf values")
             
             # 2. FAISS Retrieval
-            distances, _ = self.memory_bank.query(batch_features, k=1)
+            try:
+                distances, _ = self.memory_bank.query(batch_features, k=1)
+            except Exception as exc:
+                raise RuntimeError(f"Memory bank query failed during prediction: {exc}") from exc
             
             inference_time_ms = (time.perf_counter() - start_time) * 1000.0
             # ------------------------------------
             
             # Reshape distances back into spatial heatmaps (assuming 28x28 feature grid)
-            patch_h, patch_w = 28, 28 
+            patches_per_image = distances.shape[0] // B
+            grid_size = int(np.sqrt(patches_per_image)) if patches_per_image > 0 else 0
+            if grid_size <= 0 or grid_size * grid_size != patches_per_image:
+                raise ValueError(
+                    f"Cannot reshape patch distances into square grid: total={distances.shape[0]}, batch={B}"
+                )
+            patch_h, patch_w = grid_size, grid_size
             distances_reshaped = distances.reshape(B, patch_h, patch_w)
             
             for i in range(B):
@@ -127,6 +160,10 @@ class EnhancedAnomalyInspector:
                 
                 # Binarize mask
                 binary_mask = (anomaly_map > self.pixel_threshold).astype(np.uint8)
+
+                if not np.isfinite(image_score):
+                    LOGGER.warning("Non-finite image score detected; replacing with 0.0")
+                    image_score = 0.0
                 
                 results.append(InspectionResult(
                     image_score=image_score,

@@ -6,6 +6,7 @@ import argparse
 import io
 import os
 import sys
+import logging
 from pathlib import Path
 import cv2
 import matplotlib
@@ -28,7 +29,15 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 torch.serialization.add_safe_globals([EnhancedAnomalyInspector])
 
 ROOT_DIR = Path(__file__).resolve().parent
-WEIGHTS_DIR = ROOT_DIR / "weights"
+PROJECT_ROOT = ROOT_DIR.parent
+WEIGHTS_DIR = PROJECT_ROOT / "weights"
+
+LOGGER = logging.getLogger(__name__)
+
+
+def configure_logging(verbose: bool) -> None:
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(level=level, format="%(levelname)s: %(message)s")
 
 class PresentationDemo:
     def __init__(self, model_path=None):
@@ -47,7 +56,19 @@ class PresentationDemo:
                 self.inspector = EnhancedAnomalyInspector()
             else:
                 print(f"\n[1/3] Loading model from: {model_path.name}")
+                try:
+                    self.inspector = torch.load(str(model_path), map_location='cpu', weights_only=False)
+                except Exception as exc:
+                    raise RuntimeError(f"Failed to load model at {model_path}: {exc}") from exc
+        else:
+            model_path = Path(model_path)
+            if not model_path.exists():
+                raise FileNotFoundError(f"Model file not found: {model_path}")
+            print(f"\n[1/3] Loading model from: {model_path.name}")
+            try:
                 self.inspector = torch.load(str(model_path), map_location='cpu', weights_only=False)
+            except Exception as exc:
+                raise RuntimeError(f"Failed to load model at {model_path}: {exc}") from exc
                 
         # The Academic Transform Pipeline (Preserves geometry via SquarePad)
         self.transform = transforms.Compose([
@@ -57,7 +78,7 @@ class PresentationDemo:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         
-        self.output_dir = ROOT_DIR / "presentation_results"
+        self.output_dir = PROJECT_ROOT / "presentation_results"
         self.output_dir.mkdir(parents=True, exist_ok=True)
         print("[2/3] Transform pipeline and output directories configured.")
         print("[3/3] System ready.\n")
@@ -69,14 +90,16 @@ class PresentationDemo:
         """
         print(f"Starting Feature Extraction for: {dataset_name}")
         
-        base_data_path = ROOT_DIR / "data" / dataset_name
+        base_data_path = PROJECT_ROOT / "data" / dataset_name
         train_path = base_data_path / "train" / "good"
         
         if not train_path.exists():
             print(f"ERROR: Could not find training data at {train_path}")
             return
 
-        image_files = list(train_path.glob("*.png")) + list(train_path.glob("*.jpg"))
+        image_files = list(train_path.glob("*.png")) + list(train_path.glob("*.jpg")) + list(train_path.glob("*.jpeg"))
+        if not image_files:
+            raise FileNotFoundError(f"No training images found in {train_path}")
         all_features = []
         
         with torch.no_grad():
@@ -88,7 +111,7 @@ class PresentationDemo:
                 patch_features = self.inspector.feature_extractor.extract_patch_features(img_tensor, apply_p4m=True)
                 all_features.append(patch_features)
 
-        final_output = Path(output_path) if output_path else (ROOT_DIR / "data" / "features")
+        final_output = Path(output_path) if output_path else (PROJECT_ROOT / "data" / "features")
         final_output.mkdir(parents=True, exist_ok=True)
         
         train_array = np.vstack(all_features)
@@ -103,11 +126,18 @@ class PresentationDemo:
         if not img_path.exists():
             print(f"ERROR: Image not found at {img_path}")
             return
+        if img_path.suffix.lower() not in {".jpg", ".jpeg", ".png", ".bmp", ".webp"}:
+            print(f"ERROR: Unsupported image format for {img_path.name}")
+            return
 
         print(f"Inspecting: {img_path.name}...")
         
         # 1. Load and Transform
-        img_pil = Image.open(img_path).convert('RGB')
+        try:
+            img_pil = Image.open(img_path).convert('RGB')
+        except Exception as exc:
+            print(f"ERROR: Failed to open image {img_path}: {exc}")
+            return
         img_tensor = self.transform(img_pil).unsqueeze(0)
         
         # 2. Predict (apply_p4m=False during inference!)
@@ -168,7 +198,14 @@ class PresentationDemo:
         Runs inference on an entire folder of test images.
         """
         dir_path = Path(image_dir)
-        image_files = list(dir_path.glob("*.png")) + list(dir_path.glob("*.jpg"))
+        if not dir_path.exists() or not dir_path.is_dir():
+            print(f"ERROR: Directory not found: {dir_path}")
+            return
+
+        image_files = list(dir_path.glob("*.png")) + list(dir_path.glob("*.jpg")) + list(dir_path.glob("*.jpeg"))
+        if not image_files:
+            print(f"ERROR: No supported image files found in {dir_path}")
+            return
         
         print(f"\nStarting Batch Inspection on {len(image_files)} images in {dir_path.name}...")
         for img_path in tqdm(image_files):
@@ -180,9 +217,17 @@ def main():
     parser.add_argument("--mode", type=str, default="demo", choices=["demo", "extract_only"])
     parser.add_argument("--dataset", type=str, default="mvtec_toothbrush", help="Dataset name for feature extraction")
     parser.add_argument("--output", type=str, default=None, help="Output directory for cached features")
+    parser.add_argument("--model_path", type=str, default=None, help="Optional serialized inspector path")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logs")
     args = parser.parse_args()
 
-    demo = PresentationDemo()
+    configure_logging(args.verbose)
+
+    try:
+        demo = PresentationDemo(model_path=args.model_path)
+    except Exception as exc:
+        LOGGER.error("Initialization failed: %s", exc)
+        sys.exit(1)
 
     if args.mode == "extract_only":
         demo.extract_and_cache_features(args.dataset, args.output)
