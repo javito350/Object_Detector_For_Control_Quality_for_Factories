@@ -3,6 +3,8 @@ from PIL import Image
 import os
 from torchvision import transforms as T
 
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp")
+
 class MVTecStyleDataset(Dataset):
     def __init__(self, root_dir, category='bottle', is_train=True, img_size=224):
         self.root = os.path.join(root_dir, category, 'train' if is_train else 'test')
@@ -14,7 +16,7 @@ class MVTecStyleDataset(Dataset):
         good_dir = os.path.join(self.root, 'good')
         if os.path.exists(good_dir):
             for fname in os.listdir(good_dir):
-                if fname.endswith(('.png', '.jpg')):
+                if fname.lower().endswith(IMAGE_EXTENSIONS):
                     self.samples.append((os.path.join(good_dir, fname), 0))
         
         # defective samples (test only)
@@ -25,7 +27,7 @@ class MVTecStyleDataset(Dataset):
                 defect_dir = os.path.join(self.root, defect_type)
                 if os.path.isdir(defect_dir):
                     for fname in os.listdir(defect_dir):
-                        if fname.endswith(('.png', '.jpg')):
+                        if fname.lower().endswith(IMAGE_EXTENSIONS):
                             self.samples.append((os.path.join(defect_dir, fname), 1))
         
         # transformations
