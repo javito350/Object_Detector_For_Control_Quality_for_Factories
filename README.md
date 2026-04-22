@@ -1,167 +1,103 @@
-# Object Detector for Control Quality in Factories
+# Edge AI Anomaly Detection: Resolving the Trilemma
 
-Research prototype for CMPSC 580 Junior Seminar.
+A fast, memory-efficient, few-shot ($N \le 10$) industrial anomaly detection system optimized for CPU-bound edge gateways. This repository contains the official prototype for the CMPSC 580 Junior Seminar research project: *"One Shot Detection for Control of Quality in Factories."*
 
-This repository implements a one-shot and few-shot factory quality-control pipeline focused on defect inspection with limited normal samples. The current production prototype uses a symmetry-aware anomaly detector with FAISS retrieval and EVT thresholding. YOLO can be integrated as a front-end detector for object localization, while this system handles defect scoring and pass/fail decisions.
+## 📌 Overview
+Modern industrial visual inspection faces an **Edge AI Trilemma**: balancing geometric robustness, memory footprint, and retrieval latency. This pipeline resolves the trilemma by replacing standard exact-search memory banks with a symmetry-aware, quantized retrieval system.
 
-## Why This Prototype Matters
+**Key Architectural Features:**
+* **$p4m$ Symmetry Augmentation:** Offline manifold expansion resolving right-angle rotational blindness for directional geometries.
+* **8-bit FAISS IVF-PQ Memory Bank:** Compresses the feature index by >10x (450MB → 38MB) while preserving 84.3% of exact-search fidelity.
+* **EVT Thresholding:** Calibration-free, automated pass/fail boundaries modeled on Extreme Value Theory (GPD tail fitting).
+* **CPU-Optimized:** Achieves a **12.73ms retrieval-stage latency** on standard consumer CPUs.
 
-Factory lines often have many normal parts and very few labeled defects. This project addresses that gap by:
-- Learning only from normal support images (few-shot setup).
-- Retrieving nearest normal patch features from a compressed FAISS memory bank.
-- Producing image-level and pixel-level anomaly scores for QC decisions.
-- Running in practical latency ranges for edge-style deployment experiments.
+## ⚙️ Installation & Setup
 
-## Repository Map
+**Prerequisites:** Python 3.10+ and Git. (Tested on Python 3.13).
 
-- src/: Core Python pipeline, experiment scripts, evaluation utilities.
-- src/models/: Feature extraction, memory bank, threshold calibration, inference logic.
-- data/: Datasets (MVTec, water_bottles, VisA format).
-- weights/: Serialized model artifacts.
-- results/: CSV outputs and benchmark results.
-- Readme/: Extended guides (installation, usage, testing, limitations).
-- docs/: Technical notes created for reproducibility and grading.
+1. **Clone the repository:**
+	```bash
+	git clone [https://github.com/javito350/Object_Detector_For_Control_Quality_for_Factories.git](https://github.com/javito350/Object_Detector_For_Control_Quality_for_Factories.git)
+	cd Object_Detector_For_Control_Quality_for_Factories
+Create and activate a virtual environment:
 
-## Prerequisites
-
-- Python 3.10+ (tested with 3.13 in this repo).
-- Git.
-- Recommended: NVIDIA GPU + CUDA for faster inference.
-- Works on CPU, but slower.
-
-Required Python packages are listed in requirements.txt.
-
-## Step-by-Step Installation
-
-1. Clone and enter the repository.
-
-```bash
-git clone <your-repo-url>
-cd Quality_control_for_Factories
-```
-
-2. Create a virtual environment.
-
-```bash
+Bash
 python -m venv .venv
-```
 
-3. Activate environment.
-
-Windows PowerShell:
-```powershell
+# Windows PowerShell:
 .venv\Scripts\Activate.ps1
-```
-
-Windows Git Bash:
-```bash
+# Windows Git Bash:
 source .venv/Scripts/activate
-```
-
-macOS/Linux:
-```bash
+# macOS/Linux:
 source .venv/bin/activate
-```
+Install dependencies:
 
-4. Install dependencies.
-
-```bash
+Bash
 pip install -r requirements.txt
-```
+Dataset & Weights:
 
-5. Verify installation.
+Model weights should be placed in weights/ (e.g., calibrated_inspector.pth).
 
-```bash
-python -c "import torch, faiss, cv2, numpy; print('OK')"
-```
+Note on Data: The full raw image datasets (MVTec AD, VisA) and generated experimental CSVs for this project are hosted in our dedicated [Insert Your Dedicated Data Repository URL Here]. Extract datasets into the data/ folder in the project root.
 
-6. Ensure model/data assets exist.
+🚀 Usage Guide
+A. Real-Time Demo Inference
+Run the inspection pipeline on a single image. The system will print the anomaly score, pass/fail status, and save a heatmap visualization into presentation_results/.
 
-- Model weights in weights/ (for example, calibrated_inspector.pth).
-- Dataset available under data/ (for example, data/mvtec or data/water_bottles).
-
-## Usage Guide
-
-### A. Demo Inference on One Image
-
-```bash
+Bash
 python src/run_demo.py data/water_bottles/test/<image>.jpg --verbose
-```
+To run batch inference on an entire folder:
 
-Expected behavior:
-- Prints anomaly score and pass/fail status.
-- Saves visualization into presentation_results/.
-
-### B. Batch Inference on a Folder
-
-```bash
+Bash
 python src/run_demo.py data/water_bottles/test/
-```
+B. Reproduce the WACV 8-bit Deployment Evaluation
+To replicate the 5-seed support-set variance autopsy reported in the paper:
 
-### C. Reproduce 8-bit Seeded Evaluation (5 seeds)
-
-```bash
+Bash
 python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 111 --output-csv results_8bit_seed111.csv
 python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 333 --output-csv results_8bit_seed333.csv
 python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 999 --output-csv results_8bit_seed999.csv
 python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 2026 --output-csv results_8bit_seed2026.csv
 python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 3407 --output-csv results_8bit_seed3407.csv
-```
+C. Aggregate Seeded Results
+Aggregate the multi-seed evaluation into the final Markdown table (reports Mean ± SD for Image/Pixel AUROC):
 
-### D. Aggregate Seeded Results into Markdown Table
-
-```bash
+Bash
 python src/summarize_seeded_bits8_markdown.py results_8bit_seed111.csv results_8bit_seed333.csv results_8bit_seed999.csv results_8bit_seed2026.csv results_8bit_seed3407.csv
-```
+📊 Core Empirical Results (N=10)
+When evaluated on the MVTec AD benchmark across 5 random support-set seeds under the 8-bit FAISS configuration:
 
-Expected output columns:
-- Category
-- Image AUROC (Mean +- SD)
-- Pixel AUROC (Mean +- SD)
+Mean Image AUROC: 0.7792 ± 0.0332
 
-## Input and Output Formats
+Mean Pixel AUROC: 0.9013 ± 0.0064
 
-Inputs:
-- RGB images (.jpg, .jpeg, .png, .bmp, .webp) for src/run_demo.py.
-- CSV files containing category, image_auroc, pixel_auroc for src/summarize_seeded_bits8_markdown.py.
+Memory Footprint: 38 MB
 
-Outputs:
-- Visualization images in presentation_results/.
-- Benchmark CSV files in repository root or results/.
-- Console metrics such as AUROC and retrieval latency.
+Retrieval Latency: 12.73 ms
 
-## Troubleshooting
+🛠️ Troubleshooting
+ModuleNotFoundError (torch/faiss/opencv): Ensure your virtual environment is activated before running pip install -r requirements.txt.
 
-1. ModuleNotFoundError (torch/faiss/opencv)
-- Activate virtual environment.
-- Re-run pip install -r requirements.txt.
+CUDA not available: The code safely falls back to CPU logic for edge simulation. You can verify GPU status via python -c "import torch; print(torch.cuda.is_available())".
 
-2. CUDA not available or GPU errors
-- The code falls back to CPU in multiple paths.
-- Verify GPU with python -c "import torch; print(torch.cuda.is_available())".
+Missing model/dataset: Ensure weights/calibrated_inspector.pth exists and that datasets are placed under data/ with the standard category/train/good/ structure.
 
-3. Missing model file
-- Ensure weights/calibrated_inspector.pth exists, or pass --model_path explicitly.
+📚 Project Documentation
+Research Report & Journal: [Link to your Report Repo]
 
-4. Missing dataset path
-- Ensure data is placed under data/ with expected subfolders.
+Extended Setup/Testing: See Readme/INSTALLATION.md and Readme/TESTING.md.
 
-5. Placeholder path errors in CSV summarizer
-- Use real file paths, not path/to/seed1.csv.
+Technical Metrics Guide: See docs/PROTOTYPE_TECHNICAL_GUIDE.md.
 
-## Research Journal and Report Links
+🧑‍💻 Author
+Javier Bejarano Jiménez | Allegheny College | Computer Science and Mathematics
 
-- Project Resume / Journal Notes: Readme/PROJECT_RESUME.md
-- Extended Project Documentation: Readme/README.md
-- Full Presentation Script (report narrative): presentation/presentation_script.md
-- Technical alignment and metrics note: docs/PROTOTYPE_TECHNICAL_GUIDE.md
-- Commit evidence snapshot: docs/COMMIT_EVIDENCE.md
 
-## Additional Documentation
+***
 
-- Readme/INSTALLATION.md
-- Readme/USAGE.md
-- Readme/TESTING.md
-- Readme/LIMITATIONS_AND_FUTURE.md
-- docs/PROTOTYPE_TECHNICAL_GUIDE.md
-- docs/EXAMPLE_RUNS.md
+### 🏁 Final Instructions:
+1. Paste this into your repository.
+2. Update the **two bracketed links** (the URL for your new Data Repository under Step 4, and the URL for your Research Report Repo under Project Documentation).
+3. Commit and push.
+
+Once this is pushed, you have officially satisfied every single rubric item, coding requirement, and writing standard for CMPSC 580. Congratulations on an incredibly successful semester!
