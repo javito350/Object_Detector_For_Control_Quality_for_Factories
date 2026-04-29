@@ -54,16 +54,16 @@ B. Reproduce the WACV 8-bit Deployment Evaluation
 To replicate the 5-seed support-set variance autopsy reported in the paper:
 
 Bash
-python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 111 --output-csv results_8bit_seed111.csv
-python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 333 --output-csv results_8bit_seed333.csv
-python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 999 --output-csv results_8bit_seed999.csv
-python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 2026 --output-csv results_8bit_seed2026.csv
-python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 3407 --output-csv results_8bit_seed3407.csv
+python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 111 --output-csv final_csv_exports/results_8bit_seed111.csv
+python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 333 --output-csv final_csv_exports/results_8bit_seed333.csv
+python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 999 --output-csv final_csv_exports/results_8bit_seed999.csv
+python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 2026 --output-csv final_csv_exports/results_8bit_seed2026.csv
+python src/conference_multiclass_eval.py --pq-bits 8 --support-seed 3407 --output-csv final_csv_exports/results_8bit_seed3407.csv
 C. Aggregate Seeded Results
 Aggregate the multi-seed evaluation into the final Markdown table (reports Mean ± SD for Image/Pixel AUROC):
 
 Bash
-python src/summarize_seeded_bits8_markdown.py results_8bit_seed111.csv results_8bit_seed333.csv results_8bit_seed999.csv results_8bit_seed2026.csv results_8bit_seed3407.csv
+python final_csv_exports/summarize_seeded_bits8_markdown.py final_csv_exports/results_8bit_seed111.csv final_csv_exports/results_8bit_seed333.csv final_csv_exports/results_8bit_seed999.csv final_csv_exports/results_8bit_seed2026.csv final_csv_exports/results_8bit_seed3407.csv
 📊 Core Empirical Results (N=10)
 When evaluated on the MVTec AD benchmark across 5 random support-set seeds under the 8-bit FAISS configuration:
 

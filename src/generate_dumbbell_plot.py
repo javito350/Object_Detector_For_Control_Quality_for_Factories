@@ -81,9 +81,22 @@ def main() -> None:
     ax.set_yticklabels(merged["Category"])
     ax.set_xlabel("Image-level AUROC")
     ax.set_ylabel("Category")
-    ax.set_title("Figure 4.2: p4m Ablation (Baseline vs Ours)")
+    ax.set_title("Figure 4.2: p4m Ablation (Baseline vs Ours)\n(single representative seed)")
     ax.grid(axis="x", linestyle="--", alpha=0.35)
     ax.legend(loc="lower right")
+
+    # Add text box about 5-seed results
+    textstr = "5-seed results differ significantly — see Table 4"
+    props = dict(boxstyle="round,pad=0.5", facecolor="wheat", alpha=0.8)
+    ax.text(
+        0.02,
+        0.98,
+        textstr,
+        transform=ax.transAxes,
+        fontsize=10,
+        verticalalignment="top",
+        bbox=props,
+    )
 
     min_x = min(merged["Baseline_AUROC"].min(), merged["Ours_AUROC"].min())
     max_x = max(merged["Baseline_AUROC"].max(), merged["Ours_AUROC"].max())
