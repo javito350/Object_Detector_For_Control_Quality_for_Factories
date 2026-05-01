@@ -83,7 +83,7 @@ This will install PyTorch, FAISS, OpenCV, and all other dependencies automatical
 
 **Dataset (MVTec AD):**
 
-The full dataset is hosted in the project's dedicated data repository. Download it from here:
+You can find the results in:
 **[Project Data Repository](https://github.com/javito350/Quality_Control_Factory_Data)**
 
 Once downloaded, extract it so your project folder looks exactly like this:
