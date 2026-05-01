@@ -143,10 +143,13 @@ python src/run_demo.py data/bottle/test/broken_large/000.png --verbose
 **Example Output:**
 
 When running the command above on a defective bottle, you will see output like this:
+
+```bash
 [INFO]  Loading memory bank... done (38 MB)
 [INFO]  Running retrieval... done (12.73 ms)
 [RESULT] Anomaly Score: 0.847  |  Status: FAIL
 [INFO]  Heatmap saved to presentation_results/bottle_000_heatmap.png
+```
 
 ![Example Heatmap Output](images/bottle_m16_heatmap_rank1.png)
 
