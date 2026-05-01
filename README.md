@@ -28,8 +28,7 @@ exact-search memory banks with a symmetry-aware, quantized retrieval system.
 
 ## ⚙️ Installation & Setup (Works on Any Laptop)
 
-This prototype runs on **Windows, macOS, and Linux**. It will use a GPU automatically if one is
-available, but it is explicitly designed and optimized to run on a standard CPU — no GPU needed.
+I have run this prototype run  **Windows, macOS, and Linux** thanks of github actions.
 
 **Prerequisites:** Install these two tools first if you do not already have them:
 - [Python 3.10 or higher](https://www.python.org/downloads/) (tested on Python 3.13)
