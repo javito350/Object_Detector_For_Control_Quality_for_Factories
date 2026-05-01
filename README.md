@@ -28,12 +28,11 @@ exact-search memory banks with a symmetry-aware, quantized retrieval system.
 
 ## ⚙️ Installation & Setup (Works on Any Laptop)
 
-This prototype runs on **Windows, macOS, and Linux**. It will use a GPU automatically if one is
-available, but it is explicitly designed and optimized to run on a standard CPU — no GPU needed.
+I have verified that this prototype runs natively on **Windows, macOS, and Linux** using GitHub Actions. It will use a GPU automatically if one is available, but it is explicitly designed and optimized to run on a standard CPU — no GPU needed.
 
 **Prerequisites:** Install these two tools first if you do not already have them:
-- [Python 3.10 or higher](https://www.python.org/downloads/) (tested on Python 3.13)
 - [Git](https://git-scm.com/downloads)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) (An extremely fast Python package manager written in Rust)
 
 ---
 
@@ -48,15 +47,16 @@ cd Object_Detector_For_Control_Quality_for_Factories
 
 ---
 
-### Step 2 — Create a Virtual Environment
+### Step 2 — Create a Virtual Environment and Install Dependencies
 
-This keeps all dependencies isolated from the rest of your system. Run:
+Because we are using `uv`, you can create an isolated virtual environment and install all of the project requirements in a single, lightning-fast step:
 
 ```bash
-python -m venv .venv
+uv venv
+uv pip install -r requirements.txt
 ```
 
-Then **activate** it using the command for your operating system:
+Then **activate** the environment using the command for your operating system:
 
 | Operating System | Command |
 |---|---|
@@ -68,28 +68,16 @@ Then **activate** it using the command for your operating system:
 
 ---
 
-### Step 3 — Install Dependencies
-
-With the virtual environment active, install all required packages:
-
-```bash
-pip install -r requirements.txt
-```
-
-This will install PyTorch, FAISS, OpenCV, and all other dependencies automatically.
-
----
-
-### Step 4 — Download the Dataset & Model Weights
+### Step 3 — Download the Dataset & Model Weights
 
 **Dataset (MVTec AD):**
 
-The full dataset is hosted in the project's dedicated data repository. Download it from here:
+You can find the required dataset for this project hosted here:
 **[Project Data Repository](https://github.com/javito350/Quality_Control_Factory_Data)**
 
 Once downloaded, extract it so your project folder looks exactly like this:
 
-```
+```plaintext
 Object_Detector_For_Control_Quality_for_Factories/
 ├── data/
 │   ├── bottle/
@@ -107,10 +95,9 @@ Object_Detector_For_Control_Quality_for_Factories/
 
 **Model Weights:**
 
-The pre-trained model weights file (`calibrated_inspector.pth`) is included in the data repository
-linked above. Place it at:
+The pre-trained model weights file (`calibrated_inspector.pth`) is included in the data repository linked above. Place it inside your local `weights` folder so it looks like:
 
-```
+```plaintext
 weights/calibrated_inspector.pth
 ```
 
@@ -129,9 +116,12 @@ and save a heatmap visualization into `presentation_results/`.
 ```bash
 python src/run_demo.py data/bottle/test/broken_large/000.png --verbose
 ```
-📝 Substitute `data/bottle/test/broken_large/000.png` with any valid image path from your downloaded dataset.
+
+> 📝 Substitute `data/bottle/test/broken_large/000.png` with any valid image path from your
+> downloaded dataset.
 
 **Example Output:**
+
 When running the command above on a defective bottle, the terminal will output the anomaly score and pass/fail status. The system will also generate a visualization in the `presentation_results/` folder highlighting the exact location of the defect:
 
 ![Example Heatmap Output](images/bottle_m16_heatmap_rank1.png)
@@ -141,7 +131,6 @@ To run batch inference on an entire folder at once:
 ```bash
 python src/run_demo.py data/bottle/test/broken_large/
 ```
-
 
 ---
 
@@ -197,11 +186,11 @@ Your virtual environment is not active. Close and reopen your terminal, navigate
 folder, run the activate command from Step 2 again, then retry.
 
 **`FileNotFoundError` for `calibrated_inspector.pth`:**
-The model weights file is missing. Download it from the data repository in Step 4 and place it at
+The model weights file is missing. Download it from the data repository in Step 3 and place it at
 `weights/calibrated_inspector.pth`.
 
 **`FileNotFoundError` for dataset images:**
-The dataset is not in the right place. Re-read Step 4 and verify your folder structure matches the
+The dataset is not in the right place. Re-read Step 3 and verify your folder structure matches the
 tree shown there exactly.
 
 **GPU / CUDA warnings:**
