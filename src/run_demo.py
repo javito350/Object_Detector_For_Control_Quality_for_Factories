@@ -26,6 +26,8 @@ from models.symmetry_feature_extractor import SquarePad
 
 # Ensure proper encoding
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.serialization.add_safe_globals([EnhancedAnomalyInspector])
 
 ROOT_DIR = Path(__file__).resolve().parent
