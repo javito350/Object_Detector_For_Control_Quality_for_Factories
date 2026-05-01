@@ -97,7 +97,7 @@ Object_Detector_For_Control_Quality_for_Factories/
 
 **Model Weights:**
 
-The pre-trained model weights file (`calibrated_inspector.pth`) is included in the data repository linked above. Place it inside your local `weights` folder so it looks like:
+The pre-trained model weights file (`calibrated_inspector.pth`) is located in the root of the Quality_Control_Factory_Data repository. Download it directly and place it inside your local `weights/` folder. The file is approximately 85 MB. To verify the download is not corrupt, confirm the file size matches before running the system.
 
 ```plaintext
 weights/calibrated_inspector.pth
