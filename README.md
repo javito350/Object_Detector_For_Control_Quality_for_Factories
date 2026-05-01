@@ -110,6 +110,24 @@ weights/calibrated_inspector.pth
 
 ## 🚀 Usage Guide
 
+### Command-Line Arguments
+
+**`run_demo.py`**
+
+| Argument | Required | Description |
+|---|---|---|
+| `image_path` | ✅ Yes | Path to a single image file or a folder of images |
+| `--verbose` | No | Prints anomaly score and pass/fail status to the terminal. Omit for silent mode. |
+
+**`conference_multiclass_eval.py`**
+
+| Argument | Required | Description |
+|---|---|---|
+| `--pq-bits` | ✅ Yes | Quantization bit-width for FAISS IVF-PQ. Valid values: 4 or 8. Use 8 to reproduce paper results. |
+| `--support-seed` | ✅ Yes | Random seed for support-set sampling. Paper uses: 111, 333, 999, 2026, 3407. |
+| `--output-csv` | ✅ Yes | Path where the results CSV will be saved. |
+
+
 ### A. Single-Image Demo (Quickest way to verify everything works)
 
 Run the inspection pipeline on one image. The system will print the anomaly score, pass/fail status,
