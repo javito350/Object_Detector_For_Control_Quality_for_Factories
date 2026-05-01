@@ -122,41 +122,42 @@ class PresentationDemo:
         """
         Runs full inference on a single image and generates the interpretable heatmap.
         """
-        img_path = Path(image_path)
-        if not img_path.exists():
-            print(f"ERROR: Image not found at {img_path}")
-            return
-        if img_path.suffix.lower() not in {".jpg", ".jpeg", ".png", ".bmp", ".webp"}:
-            print(f"ERROR: Unsupported image format for {img_path.name}")
-            return
+        # 1. Validate that the file actually exists before trying to open it
+        if not os.path.exists(image_path):
+            print(f"\n[ERROR] File not found: '{image_path}'")
+            print("Please check the path and ensure the dataset is downloaded correctly.")
+            sys.exit(1) # Exit gracefully with an error code
 
-        print(f"Inspecting: {img_path.name}...")
-        
-        # 1. Load and Transform
         try:
-            img_pil = Image.open(img_path).convert('RGB')
-        except Exception as exc:
-            print(f"ERROR: Failed to open image {img_path}: {exc}")
-            return
-        img_tensor = self.transform(img_pil).unsqueeze(0)
-        
-        # 2. Predict (apply_p4m=False during inference!)
-        try:
+            # 2. Try to load the image
+            img_pil = Image.open(image_path).convert('RGB')
+            
+            # 3. Validate that the image was loaded correctly
+            if img_pil is None:
+                raise ValueError(f"Unable to read the image file at '{image_path}'. It may be corrupted or an unsupported format.")
+                
+            print(f"Inspecting: {Path(image_path).name}...")
+            img_tensor = self.transform(img_pil).unsqueeze(0)
+            
+            # 4. Predict (apply_p4m=False during inference!)
             # predict() returns a list of results (one per batch item). We take the first [0].
             result = self.inspector.predict(img_tensor, apply_p4m=False)[0]
+
+            # 5. Console Output
+            status = "DEFECT DETECTED" if result.is_defective else "NOMINAL (PASS)"
+            print(f" -> Result: {status}")
+            print(f" -> Anomaly Score: {result.image_score:.3f} (Threshold: {self.inspector.image_threshold:.3f})")
+            print(f" -> Latency: {result.inference_time_ms:.1f} ms")
+
+            # 6. Visualization
+            if save_visualization:
+                self.save_visualization(Path(image_path), img_pil, result)
+
         except Exception as e:
-            print(f"Inference failed. Is the FAISS memory bank built? Error: {e}")
-            return
-
-        # 3. Console Output
-        status = "DEFECT DETECTED" if result.is_defective else "NOMINAL (PASS)"
-        print(f" -> Result: {status}")
-        print(f" -> Anomaly Score: {result.image_score:.3f} (Threshold: {self.inspector.image_threshold:.3f})")
-        print(f" -> Latency: {result.inference_time_ms:.1f} ms")
-
-        # 4. Visualization
-        if save_visualization:
-            self.save_visualization(img_path, img_pil, result)
+            # Catch any other unexpected errors during processing
+            print(f"\n[ERROR] An unexpected error occurred while processing the image:")
+            print(f"Details: {str(e)}")
+            sys.exit(1)
 
     def save_visualization(self, img_path, img_pil, result):
         """

@@ -129,15 +129,19 @@ and save a heatmap visualization into `presentation_results/`.
 ```bash
 python src/run_demo.py data/bottle/test/broken_large/000.png --verbose
 ```
+📝 Substitute `data/bottle/test/broken_large/000.png` with any valid image path from your downloaded dataset.
 
-> 📝 Substitute `data/bottle/test/broken_large/000.png` with any valid image path from your
-> downloaded dataset. The path just needs to point to a real `.png` or `.jpg` file inside `data/`.
+**Example Output:**
+When running the command above on a defective bottle, the terminal will output the anomaly score and pass/fail status. The system will also generate a visualization in the `presentation_results/` folder highlighting the exact location of the defect:
+
+![Example Heatmap Output](images/bottle_m16_heatmap_rank1.png)
 
 To run batch inference on an entire folder at once:
 
 ```bash
 python src/run_demo.py data/bottle/test/broken_large/
 ```
+
 
 ---
 
