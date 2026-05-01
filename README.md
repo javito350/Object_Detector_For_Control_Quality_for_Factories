@@ -209,15 +209,6 @@ Try `python3` instead of `python`, or verify Python was added to your PATH durin
 
 ---
 
-## 📚 Project Documentation
-
-- **Research Paper:** [Full Paper & Report](https://github.com/javito350/junior-seminar-project-journal-and-research-report-chapters-javito350)
-- **Technical Metrics Guide:** See `docs/PROTOTYPE_TECHNICAL_GUIDE.md`
-- **Extended Setup Notes:** See `Readme/INSTALLATION.md`
-- **Testing Guide:** See `Readme/TESTING.md`
-
----
-
 ## 🧑💻 Author
 
 **Javier Bejarano Jiménez**
