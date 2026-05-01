@@ -19,6 +19,7 @@ from models.symmetry_feature_extractor import SymmetryAwareFeatureExtractor as S
 from models.thresholding import EVTCalibrator as Thresholding
 from utils.image_loader import MVTecStyleDataset
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
