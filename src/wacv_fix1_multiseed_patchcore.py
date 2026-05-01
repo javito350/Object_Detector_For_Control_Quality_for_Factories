@@ -30,8 +30,8 @@ import time
 import warnings
 from pathlib import Path
 
-os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
-os.environ.setdefault("OMP_NUM_THREADS", "1")
+# os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
+# os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 import numpy as np
 import torch
@@ -135,7 +135,13 @@ def evaluate_single(
         ),
     )
 
-    engine = Engine(accelerator=accelerator, devices=1, max_epochs=1, logger=False)
+    engine = Engine(
+        accelerator=accelerator,
+        devices=1,
+        max_epochs=1,
+        logger=False,
+        default_root_dir=PROJECT_ROOT / "results" / "tmp" / f"patchcore_{seed}_{category}",
+    )
     engine.fit(model=model, train_dataloaders=train_loader)
 
     start_time = time.perf_counter()

@@ -6,7 +6,20 @@ from torchvision import transforms as T
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".webp")
 
 class MVTecStyleDataset(Dataset):
-    def __init__(self, root_dir, category='bottle', is_train=True, img_size=224):
+    def __init__(self, root_dir, category='bottle', is_train=True, img_size=224, split=None):
+        """
+        MVTec-style dataset loader.
+
+        Backwards-compatible signature: accepts either `is_train` (bool) or `split` (str 'train'/'test')
+        to select which partition to load. If `split` is provided, it overrides `is_train`.
+        """
+        # Support legacy callers that pass `split='train'|'test'`
+        if split is not None:
+            if isinstance(split, str) and split.lower() in ('train', 'test'):
+                is_train = split.lower() == 'train'
+            elif isinstance(split, bool):
+                is_train = bool(split)
+
         self.root = os.path.join(root_dir, category, 'train' if is_train else 'test')
         self.is_train = is_train
         self.img_size = img_size
