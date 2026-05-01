@@ -33,6 +33,7 @@ I have verified that this prototype runs natively on **Windows, macOS, and Linux
 **Prerequisites:** Install these two tools first if you do not already have them:
 - [Git](https://git-scm.com/downloads)
 - [uv](https://docs.astral.sh/uv/getting-started/installation/) (An extremely fast Python package manager written in Rust)
+- Python 3.9–3.11
 
 ---
 
@@ -75,6 +76,7 @@ Then **activate** the environment using the command for your operating system:
 You can find the required dataset for this project hosted here:
 **[Project Data Repository](https://github.com/javito350/Quality_Control_Factory_Data)**
 
+Download the .zip archive from the repository, then extract it into the project root (Windows: right-click → Extract All | macOS/Linux: run unzip Quality_Control_Factory_Data.zip).
 Once downloaded, extract it so your project folder looks exactly like this:
 
 ```plaintext
