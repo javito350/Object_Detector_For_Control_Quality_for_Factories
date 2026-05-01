@@ -240,8 +240,6 @@ The pipeline performs the following checks automatically before executing:
   the script will skip it with a warning and continue processing remaining files in the folder.
 - **Dataset structure check:** If the expected `train/good/` subfolder is not found for a 
   category, the evaluator logs a warning and skips that category rather than crashing.
-- **GPU/CPU fallback:** If no CUDA-capable GPU is detected, the system automatically falls back 
-  to CPU without any user intervention required.
 
 ---
 
